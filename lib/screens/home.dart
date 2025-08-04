@@ -36,77 +36,68 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _check();
-    _loadProfileData();
+   // _loadProfileData();
     _pageController = PageController(initialPage: _selectedIndex);
   }
 
-  Future<void> _loadProfileData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      Email = prefs.getString('email');
-      usrName = prefs.getString('username');
-      String? base64Profile = prefs.getString('profile');
-      profileBytes = base64Profile != null ? base64Decode(base64Profile) : [];
-    });
-
-    if (Email != null) {
-      _fetchChatMessages();
-    }
-  }
+  // Future<void> _loadProfileData() async {
+  //   // Dummy data simulation
+  //   setState(() {
+  //     Email = 'dummy@example.com';
+  //     usrName = 'Dummy User';
+  //
+  //     // Base64 for a 1x1 transparent PNG
+  //     const base64Profile = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2N8+/btfwAJ6AP9US8GlwAAAABJRU5ErkJggg==';
+  //     profileBytes = base64Decode(base64Profile);
+  //   });
+  //
+  //  // _fetchChatMessages(); // You can comment this if you want to avoid Chat API call
+  // }
 
   Future<void> _check() async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      final String? userid = prefs.getString('userid');
-      final String? dbIP = prefs.getString('dip');
-      final String ip = await Api().userIpAddress();
+      // Dummy simulation
+      debugPrint("Running _check with dummy data");
 
-      if (userid != null) {
-        await Api().fetchIP(userid);
-        final bool isExist = await Atten().checkUserIdExists(userid);
+      await Future.delayed(const Duration(milliseconds: 800));
 
-        EFullScreenLoader.openLoadingDialog('Loading...', context);
+      EFullScreenLoader.openLoadingDialog('Loading...', context);
 
-        if (isExist) {
-          await Future.delayed(const Duration(seconds: 2));
-          EFullScreenLoader.stopLoading(context);
-        } else {
-          await Future.delayed(const Duration(seconds: 4));
-          EFullScreenLoader.stopLoading(context);
+      await Future.delayed(const Duration(seconds: 2));
+      EFullScreenLoader.stopLoading(context);
 
-          if (dbIP == ip) {
-            // EHelperFunctions.showSnackBar(context, 'Initializing face detection');
-            // FaceDect().initFDF();
-            // final List<Person> personList = await FaceDect().enrollPerson();
-            // if (personList.isNotEmpty) {
-            //   Navigator.push(
-            //     context,
-            //     MaterialPageRoute(
-            //       builder: (context) => FaceRecognitionView(
-            //         personList: personList,
-            //       ),
-            //     ),
-            //   );
-            // }
-          } else {
-            EHelperFunctions.showSnackBar(context, 'IP invalid');
-          }
-        }
+      // Simulate IP validation fail/success (optional)
+      bool isIpValid = true;
+
+      if (!isIpValid) {
+        EHelperFunctions.showSnackBar(context, 'IP invalid');
       }
+
+      // Uncomment below to simulate face detection logic (optional)
+      // List<Person> personList = await FaceDect().enrollPerson();
+      // if (personList.isNotEmpty) {
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (context) => FaceRecognitionView(personList: personList),
+      //     ),
+      //   );
+      // }
+
     } catch (e) {
       print('An error occurred: $e');
     }
   }
 
-  Future<void> _fetchChatMessages() async {
-    if (Email != null) {
-      try {
-        await Chat.getChatMessages(Email!);
-      } catch (e) {
-        print('Error fetching chat messages: $e');
-      }
-    }
-  }
+  // Future<void> _fetchChatMessages() async {
+  //   if (Email != null) {
+  //     try {
+  //     //  await ChatApi.getChatMessages(Email!);
+  //     } catch (e) {
+  //       print('Error fetching chat messages: $e');
+  //     }
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -166,11 +157,12 @@ class _HomePageState extends State<HomePage> {
                     border: Border.all(color: Colors.orange),
                   ),
                   child: CircleAvatar(
-                    radius: 15,
-                    backgroundImage: profileBytes.isNotEmpty
-                        ? MemoryImage(Uint8List.fromList(profileBytes))
-                        : const AssetImage('assets/images/personImg.png') as ImageProvider, // Handle default profile image or fallback
+                    radius: 50,
+                    backgroundImage: NetworkImage('https://fxcams.in/assets/img/student/b70c44fea2b026f0e56300d26efe4b96.JPG'),
                     backgroundColor: Colors.transparent,
+                    onBackgroundImageError: (error, stackTrace) {
+                      print("Image failed to load: $error");
+                    },
                   ),
                 ),
               ],

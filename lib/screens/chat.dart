@@ -23,7 +23,7 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final Chat _chatApi = Chat();
+  final ChatApi _chatApi = ChatApi();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
@@ -47,8 +47,8 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _loadChatMessages() async {
     try {
-      await Chat.getChatMessages(Email!);
-      List<dynamic>? savedMessages = await Chat.getSavedMessages();
+      await ChatApi.getChatMessages(Email!);
+      List<dynamic>? savedMessages = await ChatApi.getSavedMessages();
 
       if (savedMessages != null && savedMessages.isNotEmpty) {
         // Add a combined timestamp field for sorting

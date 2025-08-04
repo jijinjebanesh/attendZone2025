@@ -1,23 +1,24 @@
 import 'dart:convert';
+import 'package:attendzone_new/models/project_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Api.dart';
-class Chat {
+class ChatApi {
 
   final String baseUrl = 'https://attendzone-backend.onrender.com/api/v1/chat';
-
+  static final  String devUrl ="http://192.168.229.5:5000";
   // Method to get chat messages for a given email (static)
   static Future<List<dynamic>> getChatMessages(String email) async {
     String? authToken = await Get().getToken();
-    final url = Uri.parse('https://attendzone-backend.onrender.com/api/v1/chat/messages');
+    final url = Uri.parse('$devUrl/api/v1/chat/messages');
     final response = await http.post(
       url,
       headers: <String, String>{
         'Content-Type': 'application/json',
-        'Authorization': authToken!,
+        //'Authorization': authToken!,
       },
-      body: jsonEncode({'email': email}),
+      body: jsonEncode({'email': 'jijinjebanesh@gmail.com'}),
     );
 
     if (response.statusCode == 200) {
@@ -32,13 +33,34 @@ class Chat {
       throw Exception('Failed to fetch chat messages: ${response.statusCode}');
     }
   }
+   Future<List<Project_model>> getProjects() async {
+    final url = Uri.parse('http://192.168.229.5:5000/api/v1/chat/projects');
+    final response = await http.get(
+      url,
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        //'Authorization': authToken!,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body);
+      List<Project_model> projects = data.map((item) => Project_model.fromSimpleJson(item)).toList();
+      return projects;
+    } else if (response.statusCode == 404) {
+      print('No chat messages found for this email');
+      return [];
+    } else {
+      throw Exception('Failed to fetch chat messages: ${response.statusCode}');
+    }
+  }
 
   // Method to add a new chat message
   Future<void> addChatMessage(String projectName, String sender, String message) async {
     DateTime now = DateTime.now();
     String formattedDate = DateFormat('yyyy-MM-dd').format(now);
     String formattedTime = DateFormat('HH:mm:ss').format(now);
-    final url = Uri.parse('$baseUrl/add');
+    final url = Uri.parse('$devUrl/api/v1/chat/add');
     String? authToken = await Get().getToken();
     final response = await http.post(
       url,

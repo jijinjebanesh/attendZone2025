@@ -1,14 +1,9 @@
-import 'dart:convert';
-import 'dart:typed_data';
-import 'package:attendzone_new/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../Api/Api.dart';
 import '../utils/appbar.dart';
 import '../helper_functions.dart';
 
@@ -18,41 +13,23 @@ class Profile extends StatefulWidget {
   @override
   State<Profile> createState() => _ProfileState();
 }
+
 class _ProfileState extends State<Profile> {
   String? email;
   String? userName;
-  List<int> profileBytes = [];
 
   @override
   void initState() {
-    _loadProfileData();
     super.initState();
+    _loadDummyProfile();
   }
 
-  Future<void> _loadProfileData() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    print('Loading profile data...');
+  void _loadDummyProfile() {
     setState(() {
-      email = prefs.getString('email');
-      userName = prefs.getString('username');
-      String? base64Profile = prefs.getString('profile');
-      print('Email: $email');
-      print('Username: $userName');
-      if (base64Profile != null) {
-        try {
-          profileBytes = base64Decode(base64Profile);
-          print('Profile loaded successfully');
-        } catch (e) {
-          print('Error decoding base64 profile: $e');
-          profileBytes = [];
-        }
-      } else {
-        print('No profile data found');
-        profileBytes = [];
-      }
+      email = 'jijinjebanesh@gmail.com';
+      userName = 'Jijin';
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +69,7 @@ class _ProfileState extends State<Profile> {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: Theme.of(context).colorScheme.primary,
-                      width: 1.0, // Outer border width
+                      width: 1.0,
                     ),
                   ),
                 ),
@@ -103,17 +80,14 @@ class _ProfileState extends State<Profile> {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: Theme.of(context).colorScheme.primary,
-                      width: 2.0, // Inner border width
+                      width: 2.0,
                     ),
                   ),
                 ),
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 50,
-                  backgroundImage: profileBytes.isNotEmpty
-                      ? MemoryImage(Uint8List.fromList(profileBytes))
-                      : null,
-                  backgroundColor:
-                  profileBytes.isEmpty ? Colors.grey[200] : Colors.transparent, // Provide default color if profile is empty
+                  backgroundImage: NetworkImage('https://fxcams.in/assets/img/student/b70c44fea2b026f0e56300d26efe4b96.JPG'),
+                  backgroundColor: Colors.transparent,
                 ),
               ],
             ),
@@ -124,22 +98,22 @@ class _ProfileState extends State<Profile> {
               children: [
                 TF(
                   hintText: userName ?? 'Username not available',
-                  icon: Icon(Icons.person),
+                  icon: const Icon(Icons.person),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TF(
                   hintText: email ?? 'Email not available',
                   icon: Icon(MdiIcons.email),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TF(
                   hintText: 'Developer',
-                  icon: Icon(Icons.military_tech_sharp),
+                  icon: const Icon(Icons.military_tech_sharp),
                 ),
               ],
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Container(
             height: EHelperFunctions.screenHeight(context) * .15,
             width: EHelperFunctions.screenWidth(context) * .8,
@@ -149,7 +123,7 @@ class _ProfileState extends State<Profile> {
             ),
             child: Column(),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           SizedBox(
             width: EHelperFunctions.screenWidth(context) * .8,
             child: OutlinedButton(
@@ -187,14 +161,12 @@ class _ProfileState extends State<Profile> {
                             SizedBox(
                               width: MediaQuery.of(context).size.width * .25,
                               child: ElevatedButton(
-                                onPressed: () async {
-                                  SharedPreferences prefs =
-                                  await SharedPreferences.getInstance();
-                                  await prefs.clear();
+                                onPressed: () {
                                   Navigator.of(context).pop();
                                   context.go('/');
                                 },
-                                child: Text('Yes', style: GoogleFonts.rubik()),
+                                child:
+                                Text('Yes', style: GoogleFonts.rubik()),
                               ),
                             ),
                           ],
@@ -218,7 +190,7 @@ class _ProfileState extends State<Profile> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: Text('Logout'),
+              child: const Text('Logout'),
             ),
           ),
         ],

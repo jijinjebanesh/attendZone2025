@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../Api/Api.dart';
+import '../Api/chatApi.dart';
 import '../Api/notionApi.dart';
 import '../models/project_model.dart';
 import 'chat.dart';
@@ -35,7 +36,7 @@ class _ChatState extends State<Chat> {
   Future<void> _loadEmail() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      Email = prefs.getString('email');
+      Email = 'jijinjebanesh@gmail.com';
     });
   }
 
@@ -44,7 +45,7 @@ class _ChatState extends State<Chat> {
       try {
         String? authToken = await Get().getToken();
         const String apiUrl =
-            'https://attendzone-backend.onrender.com/api/v1/announcements';
+            'http://192.168.141.5:5000/api/v1/announcements';
         final response = await http.get(
           Uri.parse(apiUrl),
           headers: <String, String>{
@@ -81,8 +82,9 @@ class _ChatState extends State<Chat> {
 
   Future<List<Project_model>> fetchProjects() async {
     // Simulate network delay
+    final ChatApi _chatApi = ChatApi();
     await Future.delayed(const Duration(seconds: 1));
-    return fetchNotionPages(); // Fetch actual data using the API
+    return _chatApi.getProjects(); // Fetch actual data using the API
   }
 
   @override
@@ -284,7 +286,7 @@ class _ChatState extends State<Chat> {
                     itemBuilder: (context, index) {
                       Project_model project = projects[index];
                       return Visibility(
-                        visible: project.assignees.contains(Email!),
+                       // visible: project.assignees.contains(Email!),
                         child: Column(
                           children: [
                             GestureDetector(

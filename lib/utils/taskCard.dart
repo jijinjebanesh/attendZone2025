@@ -14,26 +14,26 @@ class TaskCard extends StatefulWidget {
 }
 
 class _TaskCardState extends State<TaskCard> {
-  late Future<List<Task_model>> _fetchTasksFuture;
+  //late Future<List<Task_model>> _fetchTasksFuture;
 
   @override
   void initState() {
     super.initState();
-    _fetchTasksFuture = fetchTasks();
+   // _fetchTasksFuture = fetchTasks();
   }
 
-  Future<List<Task_model>> fetchTasks() async {
-    try {
-      List<Task_model> fetchedTasks = await fetchNotionTasks();
-      if (fetchedTasks.isEmpty) {
-        await fetchNotionTasks();
-      }
-      return fetchedTasks;
-    } catch (e) {
-      print('Error fetching tasks: $e');
-      return [];
-    }
-  }
+  // Future<List<Task_model>> fetchTasks() async {
+  //   try {
+  //     List<Task_model> fetchedTasks = await fetchNotionTasks();
+  //     if (fetchedTasks.isEmpty) {
+  //       await fetchNotionTasks();
+  //     }
+  //     return fetchedTasks;
+  //   } catch (e) {
+  //     print('Error fetching tasks: $e');
+  //     return [];
+  //   }
+  // }
 
   Color getCompletionColor(String priority) {
     // Define colors based on priority here
@@ -105,7 +105,7 @@ class _TaskCardState extends State<TaskCard> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(15, 8, 2, 0),
                 child: SingleChildScrollView(
-                  child: Text(task.Description),
+                  child: Text(task.Description, style: TextStyle(color: Colors.yellow),),
                 ),
               ),
             ),
@@ -139,7 +139,7 @@ class _TaskCardState extends State<TaskCard> {
                         value: task.statusName,
                         onChanged: (String? newValue) async {
                           if (newValue != null) {
-                            await updateStatus(task.task_id, newValue);
+                            //await updateStatus(task.task_id, newValue);
                             setState(() {
                               // Refresh the task card state
                             });

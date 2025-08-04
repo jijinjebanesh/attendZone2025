@@ -83,12 +83,13 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
   path_provider: ^2.0.2
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.3
   settings_ui: ^2.0.2
   image_picker: ^0.8.7
   fluttertoast:
   shared_preferences:
   flutter_exif_rotation: ^0.5.1
+  flutter_native_splash:
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

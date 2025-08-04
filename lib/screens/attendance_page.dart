@@ -7,8 +7,6 @@ import 'package:badges/badges.dart' as badges;
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../Api/Api.dart';
-import '../models/attendance_model.dart';
 
 class AttendancePage extends StatefulWidget {
   const AttendancePage({super.key});
@@ -36,20 +34,19 @@ class _AttendancePageState extends State<AttendancePage> {
   Future<void> _loadId() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      userId = prefs.getString('userid');
+      userId = prefs.getString('userid') ?? 'U123'; // fallback for development
     });
     _fetchDataForUser();
   }
 
   Future<void> _fetchDataForUser() async {
-    if (userId == null) return;
-
     setState(() {
       _isLoading = true;
     });
 
     try {
-      _attendanceData = await ApiService().fetchAttendanceData(userId!);
+      // USE DUMMY DATA instead of API!
+      _attendanceData = await DummyAttendanceService().fetchAttendanceData(userId!);
       _calculateTotalHoursAndAttendance();
     } catch (e) {
       print('Failed to load data: $e');
@@ -90,7 +87,9 @@ class _AttendancePageState extends State<AttendancePage> {
 
     setState(() {
       totalHours = totalMinutes / 60;
-      attendancePercentage = (totalMinutes / expectedWorkingMinutes) * 100;
+      attendancePercentage = expectedWorkingMinutes > 0
+          ? (totalMinutes / expectedWorkingMinutes) * 100
+          : 0;
     });
   }
 
@@ -100,7 +99,8 @@ class _AttendancePageState extends State<AttendancePage> {
 
     for (int i = 1; i <= totalDaysInMonth; i++) {
       DateTime date = DateTime(year, month, i);
-      if (date.weekday != DateTime.saturday && date.weekday != DateTime.sunday) {
+      if (date.weekday != DateTime.saturday &&
+          date.weekday != DateTime.sunday) {
         totalWorkingDays++;
       }
     }
@@ -220,7 +220,8 @@ class _AttendancePageState extends State<AttendancePage> {
       itemCount: filteredData.length,
       itemBuilder: (context, index) {
         final attendanceEntry = filteredData[index];
-        String formattedDate = DateFormat('dd/MM/yyyy').format(attendanceEntry.date);
+        String formattedDate =
+        DateFormat('dd/MM/yyyy').format(attendanceEntry.date);
 
         return Column(
           children: [
@@ -248,7 +249,8 @@ class _AttendancePageState extends State<AttendancePage> {
                   ),
                   SizedBox(height: screenHeight * .03),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.02),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -313,5 +315,78 @@ class _AttendancePageState extends State<AttendancePage> {
         ),
       ),
     );
+  }
+}
+
+// Your attendance model
+class AttendanceEntry {
+  final DateTime date;
+  final TimeOfDay timeIn;
+  final TimeOfDay timeOut;
+
+  AttendanceEntry({
+    required this.date,
+    required this.timeIn,
+    required this.timeOut,
+  });
+
+  factory AttendanceEntry.fromJson(Map<String, dynamic> json) {
+    final date = DateTime.parse(json['date']);
+    final timeIn = _parseTime(json['timeIn']);
+    final timeOut = _parseTime(json['timeOut']);
+
+    return AttendanceEntry(
+      date: date,
+      timeIn: timeIn,
+      timeOut: timeOut,
+    );
+  }
+
+  static TimeOfDay _parseTime(String? timeString) {
+    if (timeString != null && timeString.isNotEmpty) {
+      final timeParts = timeString.split(':').map(int.parse).toList();
+      return TimeOfDay(hour: timeParts[0], minute: timeParts[1]);
+    } else {
+      // If timeString is null or empty, return default time (midnight)
+      return const TimeOfDay(hour: 0, minute: 0);
+    }
+  }
+}
+
+// ------------ Dummy Attendance Service ---------------
+class DummyAttendanceService {
+  Future<List<AttendanceEntry>> fetchAttendanceData(String userId) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 900));
+    // For realism: only weekdays, randomize time-in/time-out a bit
+    DateTime now = DateTime.now();
+    List<AttendanceEntry> entries = [];
+
+    // Let's make 20 recent workdays worth of sample data for the current month
+    DateTime startDate = DateTime(now.year, now.month, 1);
+    DateTime endDate = now;
+
+    for (DateTime date = startDate;
+    date.isBefore(endDate) || date.isAtSameMomentAs(endDate);
+    date = date.add(const Duration(days: 1))) {
+      if (date.weekday == DateTime.saturday || date.weekday == DateTime.sunday) continue;
+
+      // Randomize times just a bit each day
+      int inHour = 9 + (date.day % 2);   // 09:00 or 10:00
+      int inMinute = [0, 5, 10, 15][date.day % 4];
+
+      int outHour = inHour + 8 + (date.day % 2); // 17/18
+      int outMinute = [0, 10, 20, 30][date.day % 4];
+
+      entries.add(
+        AttendanceEntry(
+          date: date,
+          timeIn: TimeOfDay(hour: inHour, minute: inMinute),
+          timeOut: TimeOfDay(hour: outHour, minute: outMinute),
+        ),
+      );
+    }
+
+    return entries;
   }
 }

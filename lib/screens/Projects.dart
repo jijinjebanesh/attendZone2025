@@ -1,5 +1,3 @@
-import 'package:attendzone_new/Api/Api.dart';
-import 'package:attendzone_new/utils/appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,9 +6,8 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:badges/badges.dart' as badges;
-import '../Api/notionApi.dart';
+
 import '../helper_functions.dart';
 import '../models/project_model.dart';
 import 'project_details.dart';
@@ -27,24 +24,51 @@ class _ProjectsState extends State<Projects> {
   int _notificationCount = 3;
   String? Email;
 
-
   Future<List<Project_model>> fetchProjects() async {
-    // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    return fetchNotionPages(); // Fetch actual data using the API
+    final dummyEmail = 'john.doe@example.com';
+    return [
+      Project_model(
+        projectName: 'Student Portal Revamp',
+        statusName: 'In progress',
+        completionPercentage: 0.64,
+        priority: 'High',
+        startDate: DateTime(2024, 6, 10),
+        endDate: DateTime(2024, 9, 1),
+        tasks: ['Login Page', 'Profile UI', 'Chatbot Integration'],
+        assignees: '$dummyEmail, jane.smith@college.edu',
+        icon: '💻',
+        link: 'https://github.com/yourorg/student-portal',
+      ),
+      Project_model(
+        projectName: 'Attendance Tracker',
+        statusName: 'Requested',
+        completionPercentage: 0.1,
+        priority: 'Medium',
+        startDate: DateTime(2024, 7, 1),
+        endDate: DateTime(2024, 10, 10),
+        tasks: ['API Design', 'QR Scan', 'Report Exports'],
+        assignees: dummyEmail,
+        icon: '📲',
+        link: 'https://github.com/yourorg/attendance-tracker',
+      ),
+    ];
   }
 
   @override
+  @override
   void initState() {
     super.initState();
-    _fetchProjectsFuture = fetchProjects(); // Initialize the future for fetching projects
-    _loadEmail(); // Load email asynchronously
+    _fetchProjectsFuture = fetchProjects();
+    // Instead of loading from SharedPreferences
+    Email = 'john.doe@example.com';
   }
 
+
   Future<void> _loadEmail() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     setState(() {
-      Email = prefs.getString('email');
+      Email = prefs.getString('email') ?? 'john.doe@example.com';
     });
   }
 
@@ -54,19 +78,19 @@ class _ProjectsState extends State<Projects> {
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: ListView.builder(
-        // Separator height
-        itemCount: 6,
-        // Number of shimmer items to show
+        itemCount: 3,
         itemBuilder: (_, __) => Column(
           children: [
-            SizedBox(height: EHelperFunctions.screenHeight(context)*.01,),
+            SizedBox(height: EHelperFunctions.screenHeight(context) * .01),
             Container(
               width: screenWidth * .95,
               height: screenWidth * .35,
               decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10), color: Theme.of(context).colorScheme.surfaceContainer),
+                borderRadius: BorderRadius.circular(10),
+                color: Theme.of(context).colorScheme.surfaceContainer,
+              ),
             ),
-            SizedBox(height: EHelperFunctions.screenHeight(context)*.01,),
+            SizedBox(height: EHelperFunctions.screenHeight(context) * .01),
           ],
         ),
       ),
@@ -75,12 +99,10 @@ class _ProjectsState extends State<Projects> {
 
   @override
   Widget build(BuildContext context) {
-
-    final dark = EHelperFunctions.isDarkMode(context);
     double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.onSurface,
-      appBar: EAppBar(
+      appBar: AppBar(
         title: Text(
           'Projects',
           style: GoogleFonts.rubik(
@@ -91,188 +113,155 @@ class _ProjectsState extends State<Projects> {
         ),
         actions: [
           IconButton(
-            onPressed: () {
-              context.push('/announcements');
-            },
+            onPressed: () => context.push('/announcements'),
             icon: badges.Badge(
               badgeContent: Text(
                 '$_notificationCount',
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
-              child: Icon(Iconsax.message, color: Theme.of(context).colorScheme.primary,),
-            ),),
+              child: Icon(Iconsax.message, color: Theme.of(context).colorScheme.primary),
+            ),
+          ),
         ],
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-        ),
-        child: LiquidPullToRefresh(
-          animSpeedFactor: 1,
-          color: Colors.orange,
-          onRefresh: () async {
-            setState(() {
-              _fetchProjectsFuture = fetchProjects(); // Refresh the data
-            });
-          },
-          child: FutureBuilder<List<Project_model>>(
-            future: _fetchProjectsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return buildShimmerEffect(context);
-              } else if (snapshot.hasError) {
-                return Center(
-                  child: Text('Error: ${snapshot.error}'),
-                );
-              } else {
-                List<Project_model> projects = snapshot.data ?? [];
-                return ListView.builder(
-
-                  // padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  // // Add padding for equal spacing
-                  // separatorBuilder: (_,__) => const SizedBox(height: 8),
-                  // // Separator height
-                  itemCount: projects.length,
-                  itemBuilder: (context, index) {
-                    Project_model project = projects[index];
-                    return Visibility(
-                      visible: project.assignees.contains(Email!),
-                      // Filter projects by assignee email
-                      child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Project_Details(
-                                projectName: project.projectName,
-                                statusName: project.statusName,
-                                Link: project.link,
-                                completionPercentage:
-                                    project.completionPercentage,
-                                priority: project.priority,
-                                startDate: project.startDate,
-                                endDate: project.endDate,
-                                tasks: project.tasks,
-                              ),
+      body: LiquidPullToRefresh(
+        animSpeedFactor: 1,
+        color: Colors.orange,
+        onRefresh: () async {
+          setState(() {
+            _fetchProjectsFuture = fetchProjects();
+          });
+        },
+        child: FutureBuilder<List<Project_model>>(
+          future: _fetchProjectsFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return buildShimmerEffect(context);
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else {
+              final projects = snapshot.data ?? [];
+              return ListView.builder(
+                itemCount: projects.length,
+                itemBuilder: (context, index) {
+                  final project = projects[index];
+                  final show = project.assignees.split(',').map((e) => e.trim()).contains(Email ?? '');
+                  return Visibility(
+                    visible: show,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => Project_Details(
+                              projectName: project.projectName,
+                              statusName: project.statusName,
+                              Link: project.link,
+                              completionPercentage: project.completionPercentage,
+                              priority: project.priority,
+                              startDate: project.startDate,
+                              endDate: project.endDate,
+                              tasks: project.tasks,
                             ),
-                          );
-                        },
-                        child: Column(
-                          children: [
-                            SizedBox(height: EHelperFunctions.screenHeight(context)*.01,),
-                            Container(
-                              height: screenWidth * .35,
-                              width: screenWidth * .95,
-                              // padding: const EdgeInsets.symmetric(vertical: 8.0),
-                              // Add padding for equal spacing
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Theme.of(context).colorScheme.surfaceContainer,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF000000),
-                                    offset: Offset.fromDirection(20, 2),
-                                    blurRadius: 3,
-                                    spreadRadius: 0,
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width:
-                                        EHelperFunctions.screenWidth(context) * .03,
-                                  ),
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        CircularPercentIndicator(
-                                          radius: 30.0,
-                                          animation: true,
-                                          animationDuration: 1200,
-                                          lineWidth: 8.0,
-                                          percent: project.completionPercentage,
-                                          circularStrokeCap: CircularStrokeCap.butt,
-                                          fillColor: Theme.of(context).colorScheme.surfaceContainer,
-                                          progressColor: Colors.orange,
-                                        ),
-                                        SizedBox(
-                                          width: EHelperFunctions.screenWidth(
-                                                  context) *
-                                              .03,
-                                        ),
-                                        Expanded(
-                                          child: Align(
-                                            alignment: Alignment.centerLeft,
-                                            // Center vertically within the row
-                                            child: Text(
-                                              project.projectName,
-                                              style: GoogleFonts.rubik(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .primary,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
+                          ),
+                        );
+                      },
+                      child: Column(
+                        children: [
+                          SizedBox(height: EHelperFunctions.screenHeight(context) * .01),
+                          Container(
+                            height: screenWidth * .35,
+                            width: screenWidth * .95,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Theme.of(context).colorScheme.surfaceContainer,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF000000),
+                                  offset: Offset.fromDirection(20, 2),
+                                  blurRadius: 3,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                SizedBox(width: screenWidth * .03),
+                                Expanded(
+                                  child: Row(
                                     children: [
-                                      SizedBox(height: EHelperFunctions.screenHeight(context)*.13,),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            height: 10,
-                                            width: 10,
-                                            decoration: BoxDecoration(
-                                              color:
-                                              getCompletionColor(project.priority),
-                                              borderRadius: BorderRadius.circular(100),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 5),
-                                          Text(
-                                            project.priority ?? 'Not Set',
+                                      CircularPercentIndicator(
+                                        radius: 30.0,
+                                        animation: true,
+                                        animationDuration: 1200,
+                                        lineWidth: 8.0,
+                                        percent: project.completionPercentage.clamp(0.0, 1.0),
+                                        circularStrokeCap: CircularStrokeCap.butt,
+                                        fillColor: Theme.of(context).colorScheme.surfaceContainer,
+                                        progressColor: Colors.orange,
+                                      ),
+                                      SizedBox(width: screenWidth * .03),
+                                      Expanded(
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            project.projectName,
                                             style: GoogleFonts.rubik(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .primary,
+                                              color: Theme.of(context).colorScheme.primary,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
                                             ),
                                           ),
-                                          const SizedBox(width: 13),
-
-                                        ],
+                                        ),
                                       ),
                                     ],
                                   ),
-                                ],
-                              ),
+                                ),
+                                Column(
+                                  children: [
+                                    SizedBox(height: EHelperFunctions.screenHeight(context) * .13),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          height: 10,
+                                          width: 10,
+                                          decoration: BoxDecoration(
+                                            color: getCompletionColor(project.priority),
+                                            borderRadius: BorderRadius.circular(100),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          project.priority ?? 'Not Set',
+                                          style: GoogleFonts.rubik(
+                                            color: Theme.of(context).colorScheme.primary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 13),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            SizedBox(height: EHelperFunctions.screenHeight(context)*.01,),
-                          ],
-                        ),
+                          ),
+                          SizedBox(height: EHelperFunctions.screenHeight(context) * .01),
+                        ],
                       ),
-                    );
-                  },
-                );
-              }
-            },
-          ),
+                    ),
+                  );
+                },
+              );
+            }
+          },
         ),
       ),
     );
   }
 }
 
-// Color functions and Project_model class remain the same as in the original code
-
-Color getCompletionColor(String? category) {
-  switch (category) {
+Color getCompletionColor(String? priority) {
+  switch (priority) {
     case 'High':
       return Colors.red.shade400;
     case 'Low':
@@ -283,20 +272,5 @@ Color getCompletionColor(String? category) {
       return Colors.blue.shade400;
     default:
       return Colors.black;
-  }
-}
-
-Color getStatusColor(String? category, BuildContext context) {
-  switch (category) {
-    case 'Dropped':
-      return Colors.red.shade400;
-    case 'Done':
-      return Colors.green.shade400;
-    case 'Requested':
-      return Colors.orange.shade400;
-    case 'In progress':
-      return Colors.blue.shade400;
-    default:
-      return Theme.of(context).colorScheme.primary;
   }
 }

@@ -6,7 +6,8 @@ import '../models/attendance_model.dart';
 
 final client = http.Client();
 String globalMessage = '';
-
+String devUrl ="http://192.168.229.5:5000";
+String baseUrl ="https://attendzone-backend.onrender.com";
 class Get {
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -41,7 +42,8 @@ class Api {
       //   throw Exception('Authorization token not found');
       // }
 
-      var url = Uri.parse('https://attendzone-backend.onrender.com/api/v1/auth/login');
+      var url = Uri.parse('$devUrl/api/v1/auth/login');
+      print("Loading...............qw4qw.4q324.423.");
       var body = jsonEncode({
         'userid': userid,
         'password': password,
@@ -57,6 +59,8 @@ class Api {
       );
 
       if (response.statusCode == 200) {
+        print("Loading...............qw4qw.4q324.423.");
+
         final Map<String, dynamic> data = json.decode(response.body);
         if (data.containsKey('userId')) {
           final prefs = await _getPrefs();
@@ -84,6 +88,7 @@ class Api {
           globalMessage = '';
           return true;
         } else {
+          print('Response body: ${response.body}');
           globalMessage = 'No user data found in response';
           return false;
         }
@@ -108,7 +113,7 @@ class Api {
       }
 
       final response = await http.get(
-        Uri.parse('https://attendzone-backend.onrender.com/api/v1/users?id=$userId'),
+        Uri.parse('$devUrl/api/v1/users?id=$userId'),
         headers: <String, String>{
           'Content-Type': 'application/json',
           'Authorization': authToken,
@@ -139,7 +144,7 @@ class Api {
       }
 
       final response = await http.get(
-        Uri.parse('https://attendzone-backend.onrender.com/api/v1/users?id=$userId'),
+        Uri.parse('$devUrl/api/v1/users?id=$userId'),
         headers: <String, String>{
           'Content-Type': 'application/json',
           'Authorization': authToken,
@@ -172,7 +177,7 @@ class Atten {
       }
 
       var url = Uri.parse(
-          'https://attendzone-backend.onrender.com/api/v1/attendance/mark');
+          '$devUrl/api/v1/attendance/mark');
       var response = await http.post(
         url,
         headers: <String, String>{
@@ -200,7 +205,7 @@ class Atten {
       }
 
       var url = Uri.parse(
-          'https://attendzone-backend.onrender.com/api/v1/attendance/show?id=$userId&date=$date');
+          '$devUrl/api/v1/attendance/show?id=$userId&date=$date');
       var response = await http.get(
         url,
         headers: <String, String>{
@@ -234,7 +239,7 @@ class Atten {
       }
 
       var url = Uri.parse(
-          'https://attendzone-backend.onrender.com/api/v1/attendance/update?id=$userId&date=$date');
+          '$devUrl/api/v1/attendance/update?id=$userId&date=$date');
       var body = jsonEncode({"time_out": timeout});
 
       var response = await http.post(
@@ -268,7 +273,7 @@ class Atten {
 
       var response = await http.post(
         Uri.parse(
-            'https://attendzone-backend.onrender.com/api/v1/user/checkAttendance'),
+            '$devUrl/api/v1/user/checkAttendance'),
         headers: <String, String>{
           'Content-Type': 'application/json',
           'Authorization': authToken,
@@ -295,7 +300,7 @@ class ApiService {
   Future<List<AttendanceEntry>> fetchAttendanceData(String userId) async {
     String? authToken = await Get().getToken();
     var url = Uri.parse(
-        'https://attendzone-backend.onrender.com/api/v1/attendance/attendance?id=$userId');
+        '$devUrl/api/v1/attendance/attendance?id=$userId');
     var response = await http.get(
       url,
       headers: <String, String>{
